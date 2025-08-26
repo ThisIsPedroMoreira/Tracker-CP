@@ -1,0 +1,376 @@
+﻿@page "/"
+@using Community.Blazor.MapLibre.Examples.WebAssembly.Models
+@using Syncfusion.Blazor.DropDowns
+@using System.Net.Http.Headers
+@using System.Text.Json
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Inputs
+@using Syncfusion.Blazor.Navigations
+<!-- Enhanced Background Elements -->
+<div class="cyber-bg">
+    <div class="cyber-gradient"></div>
+    <div class="matrix-rain" id="matrixRain"></div>
+</div>
+
+<div class="particles" id="particlesContainer"></div>
+
+<div class="data-streams" id="dataStreams"></div>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div class="grid-overlay">
+    <div class="grid-lines"></div>
+    <div class="grid-glow"></div>
+</div>
+
+<div class="scanlines"></div>
+<div class="noise-overlay"></div>
+<nav>
+    <div class="nav-container">
+        <a href="#top" class="logo">
+            <svg style="vertical-align:middle; " xmlns="http://www.w3.org/2000/svg" width="59.5" height="31.9" version="1.1" viewBox="-44.4 -13.7 595 319" xml:space="preserve">
+<path d="m214-9.87h-129c-66.5 0-125 55.4-125 126 0 70.1 56 129 127 129h88.6c8.22 0.156 23.7-2.36 35.2-9.98 10.1-6.68 15.1-11.2 22.4-22l69.6-120c3.5-5.58 6.27-10.1 12.9-15.7 7.47-6.23 13.8-7.95 23.5-8.41h78.3c27.5-1.19 51.1 21.3 51.1 48.9-5e-3 27.5-23.4 50-50.9 48.9h-66.7c-13.2 0.569-21.2 2.88-32.6 9.54-13 7.56-18.5 14.4-26.8 27.7l-57.9 99.7h90l22.7-38.5c4.44-7.66 8.57-11.6 16.4-15.7 6.95-3.6 11.7-4.7 19.6-4.51h39.1c66.5 0 124-55.7 125-125 1.43-71.4-54.8-130-129-130h-93.5c-14.7 0.081-30.6 6.43-36.2 10.1-8.67 5.71-18 13.9-25.3 25.9l-69.7 121c-4.13 6.02-6.46 9.2-12.5 13.1-7.26 4.69-12.7 5.28-21.1 5.82h-74.4c-26.4-1.19-46.8-22.5-46.8-48.9 0-26.4 20.4-47.7 46.8-48.9h83.7" style="fill:#388344" />
+</svg>
+            Tracker
+        </a>
+        <ul class="nav-links">
+        </ul>
+        <div class="nav-bottom">
+            <a href="#estacao" class="cyber-button">Estação</a>
+        </div>
+        <div class="nav-bottom">
+            <a href="#comboio" class="cyber-button">Comboio em Tempo Real</a>
+        </div>
+        <button class="mobile-menu-button" id="mobileMenuBtn">
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
+    </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+<div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-menu-header d-none">
+        <a href="#top" class="mobile-menu-logo">CP Tracker</a>
+        <button class="mobile-menu-close" id="mobileMenuClose">✕</button>
+    </div>
+    <div class="mobile-menu-cta">
+        <a href="#estacao" class="cyber-button">Estação</a>
+    </div>
+    <div class="mobile-menu-cta">
+        <a href="#comboio" class="cyber-button">Comboio em Tempo Real</a>
+    </div>
+</div>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-container">
+        <h1 class="hero-title">
+            <span class="hero-nexus">CP</span><span class="hero-flow">Tracker</span>
+        </h1>
+        <p class="hero-subtitle">Consulte em tempo real informação relacionada às estações e comboios da CP.</p>
+        <div class="hero-buttons">
+            <a href="#estacao" class="btn-primary">Estação</a>
+            <a href="#comboio" class="btn-secondary">Comboio em Tempo Real</a>
+        </div>
+    </div>
+</section>
+
+<section class="features fade-up" id="estacao">
+    <div class="features-container">
+        <div class="section-header">
+            <h2 class="section-title">Estação</h2>
+            <p class="section-subtitle">Verifique as informações relativas à partidas e chegadas de determinada estação.</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="row mb-4">
+                    <div class="col p-0">
+
+                        <SfDropDownList @ref=stationDropdownRef
+                                        TValue="Station"
+                                        TItem="Station"
+                                        Placeholder="Estação"
+                                        FloatLabelType=Syncfusion.Blazor.Inputs.FloatLabelType.Always
+                                        AllowFiltering="true"
+                                        ShowClearButton=true
+                                        DataSource="@Stations"
+                                        @bind-Value="@Station"
+                                        FilterType=@Syncfusion.Blazor.DropDowns.FilterType.Contains>
+                            <DropDownListFieldSettings Text=@(nameof(Station.Name))
+                                                       Value=@(nameof(Station.Code)) />
+                            <DropDownListEvents TValue="Station"
+                                                TItem="Station"
+                                                ValueChange=@OnOriginChangedAsync />
+                        </SfDropDownList>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col p-0">
+                        <div class="grid-station-container">
+                            <SfGrid @ref=StationInfoGrid DataSource="@StationInfo" AllowPaging="true" EnableAdaptiveUI="true" Height="100%" Width="100%">
+                                <GridPageSettings PageCount="5"></GridPageSettings>
+                                <GridColumns>
+                                    <GridColumn Width="120" Field=@($"{nameof(StationTrain.trainOrigin)}.{nameof(TrainOrigin.designation)}") HeaderText="Origem" />
+                                    <GridColumn Width="120" Field=@($"{nameof(StationTrain.trainDestination)}.{nameof(TrainOrigin.designation)}") HeaderText="Destino" />
+                                    <GridColumn Width="120" Field=@($"{nameof(StationTrain.trainService)}.{nameof(TrainOrigin.designation)}") HeaderText="Tipo" />
+                                    <GridColumn Width="120" Field=@($"{nameof(StationTrain.arrivalTime)}") HeaderText="Hora de Chegada">
+                                        <Template>
+                                            @if (context is StationTrain train)
+                                            {
+                                                @if (train.arrivalTime.HasValue)
+                                                {
+
+                                                    @if (train.eta.HasValue && train.arrivalTime != train.eta)
+                                                    {
+                                                        <s>
+                                                            @train.arrivalTime
+                                                        </s>
+                                                        @(" ")
+                                                        @train.eta
+                                                    }
+                                                    else
+                                                    {
+                                                        @train.arrivalTime
+                                                    }
+                                                }
+                                            }
+                                        </Template>
+                                    </GridColumn>
+                                    <GridColumn Width="120" Field=@($"{nameof(StationTrain.departureTime)}") HeaderText="Hora de Saída">
+                                        <Template>
+                                            @if (context is StationTrain train)
+                                            {
+                                                @if (train.departureTime.HasValue)
+                                                {
+
+                                                    @if (train.etd.HasValue && train.departureTime != train.etd)
+                                                    {
+                                                        <s>
+                                                            @train.departureTime
+                                                        </s>
+                                                        @(" ")
+                                                        @train.etd
+                                                    }
+                                                    else
+                                                    {
+                                                        @train.departureTime
+                                                    }
+                                                }
+                                            }
+                                        </Template>
+                                    </GridColumn>
+                                    <GridColumn Width="120" Field=@($"{nameof(StationTrain.delay)}") HeaderText="Atraso">
+                                        <Template>
+                                            @if (context is StationTrain train)
+                                            {
+                                                @($"{train?.delay ?? 0} mins")
+                                            }
+                                        </Template>
+                                    </GridColumn>
+                                    <GridColumn Width="120" Field=@($"{nameof(StationTrain.trainNumber)}") HeaderText="Comboio nº" />
+                                    <GridColumn Width="120" Field=@($"{nameof(StationTrain.platform)}") HeaderText="Plataforma" />
+                                </GridColumns>
+                            </SfGrid>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="features fade-up" id="comboio">
+    <div class="features-container">
+        <div class="features-container">
+            <div class="section-header">
+                <h2 class="section-title">Comboio em Tempo Real</h2>
+                <p class="section-subtitle">Acompanhe o seu comboio e o seu trajeto em tempo real.</p>
+                @if (LastUpdate != null)
+                {
+                    <p class="section-subtitle">🌐 Última atualização: @(LastUpdate.GetValueOrDefault().ToString("hh:mm:ss tt"))</p>
+                    <p class="section-subtitle">🟢 Online | Latência: @(RequestElapsedMilliseconds)ms</p>
+                }
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="row mb-4">
+                        <div class="col p-0">
+                            <SfNumericTextBox TValue="int?"
+                                              Value=TrainId
+                                              ValueExpression=@(() => TrainId)
+                                              ValueChanged=@OnTrainIdChangedAsync
+                                              Decimals="0"
+                                              ShowClearButton=true
+                                              Placeholder="Comboio nº"
+                                              Min=0
+                                              Step=1
+                                              FloatLabelType=Syncfusion.Blazor.Inputs.FloatLabelType.Always />
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col p-0">
+                            <MapLibre @ref="_mapRef"
+                                      Options="_mapOptions"
+                                      Class="rounded-top" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-content">
+        <div class="footer-bottom">
+            <p>&copy; 2025. All realities reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<script src="./js/templatemo-nexus-scripts.js"></script>
+@* <div class="row">
+    <div class="col">
+        <SfTab LoadOn=@ContentLoad.Init>
+            <TabItems>
+                <TabItem>
+                    <ChildContent>
+                        <TabHeader Text="Informações de Estação"></TabHeader>
+                    </ChildContent>
+                    <ContentTemplate>
+                        <div class="row mb-4">
+                            <div class="col">
+
+                                <SfDropDownList TValue="Station"
+                                                TItem="Station"
+                                                Placeholder="Estação"
+                                                FloatLabelType=Syncfusion.Blazor.Inputs.FloatLabelType.Always
+                                                AllowFiltering="true"
+                                                ShowClearButton=true
+                                                DataSource="@Stations"
+                                                @bind-Value="@Station"
+                                                FilterType=@Syncfusion.Blazor.DropDowns.FilterType.Contains>
+                                    <DropDownListFieldSettings Text=@(nameof(Station.Name))
+                                                               Value=@(nameof(Station.Code)) />
+                                    <DropDownListEvents TValue="Station"
+                                                        TItem="Station"
+                                                        ValueChange=@OnOriginChangedAsync />
+                                </SfDropDownList>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col p-0"> 
+                                        <SfGrid @ref=StationInfoGrid DataSource="@StationInfo" AllowPaging="true" EnableAdaptiveUI="true" Height="100%" Width="100%">
+                                            <GridPageSettings PageCount="5"></GridPageSettings>
+                                            <GridColumns>
+                                                <GridColumn Width="120" Field=@($"{nameof(StationTrain.trainOrigin)}.{nameof(TrainOrigin.designation)}") HeaderText="Origem" />
+                                                <GridColumn Width="120" Field=@($"{nameof(StationTrain.trainDestination)}.{nameof(TrainOrigin.designation)}") HeaderText="Destino" />
+                                                <GridColumn Width="120"  Field=@($"{nameof(StationTrain.trainService)}.{nameof(TrainOrigin.designation)}") HeaderText="Tipo" />
+                                                <GridColumn Width="120"  Field=@($"{nameof(StationTrain.arrivalTime)}") HeaderText="Hora de Chegada">
+                                                    <Template>
+                                                        @if (context is StationTrain train)
+                                                        {
+                                                            @if (train.arrivalTime.HasValue)
+                                                            {
+
+                                                                @if (train.eta.HasValue && train.arrivalTime != train.eta)
+                                                                {
+                                                                    <s>
+                                                                        @train.arrivalTime
+                                                                    </s>
+                                                                    @(" ")
+                                                                    @train.eta
+                                                                }
+                                                                else
+                                                                {
+                                                                    @train.arrivalTime
+                                                                }
+                                                            }
+                                                        }
+                                                    </Template>
+                                                </GridColumn>
+                                                <GridColumn Width="120" Field=@($"{nameof(StationTrain.departureTime)}") HeaderText="Hora de Saída">
+                                                    <Template>
+                                                        @if (context is StationTrain train)
+                                                        {
+                                                            @if (train.departureTime.HasValue)
+                                                            {
+
+                                                                @if (train.etd.HasValue && train.departureTime != train.etd)
+                                                                {
+                                                                    <s>
+                                                                        @train.departureTime
+                                                                    </s>
+                                                                    @(" ")
+                                                                    @train.etd
+                                                                }
+                                                                else
+                                                                {
+                                                                    @train.departureTime
+                                                                }
+                                                            }
+                                                        }
+                                                    </Template>
+                                                </GridColumn>
+                                                <GridColumn Width="120" Field=@($"{nameof(StationTrain.delay)}") HeaderText="Atraso">
+                                                    <Template>
+                                                        @if (context is StationTrain train)
+                                                        {
+                                                            @($"{train?.delay ?? 0} mins")
+                                                        }
+                                                    </Template>
+                                                </GridColumn>
+                                                <GridColumn Width="120"  Field=@($"{nameof(StationTrain.trainNumber)}") HeaderText="Comboio nº" />
+                                                <GridColumn Width="120"  Field=@($"{nameof(StationTrain.platform)}") HeaderText="Plataforma" />
+                                            </GridColumns>
+                                        </SfGrid> 
+                            </div>
+                        </div>
+                    </ContentTemplate>
+                </TabItem>
+                <TabItem>
+                    <ChildContent>
+                        <TabHeader Text="Comboio em Tempo Real"></TabHeader>
+                    </ChildContent>
+                    <ContentTemplate>
+                        <div class="row mb-4">
+                            <div class="col">
+                                <SfNumericTextBox TValue="int?"
+                                                  Value=TrainId
+                                                  ValueExpression=@(() => TrainId)
+                                                  ValueChanged=@OnTrainIdChangedAsync
+                                                  Decimals="0"
+                                                  ShowClearButton=true
+                                                  Placeholder="Comboio nº"
+                                                  Min=0
+                                                  Step=1
+                                                  FloatLabelType=Syncfusion.Blazor.Inputs.FloatLabelType.Always />
+
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col p-0">
+                                <MapLibre @ref="_mapRef"
+                                          Options="_mapOptions"
+                                          Class="rounded-top" />
+                            </div>
+                        </div>
+                    </ContentTemplate>
+                </TabItem>
+            </TabItems>
+        </SfTab>
+    </div>
+</div>
+ *@
+
