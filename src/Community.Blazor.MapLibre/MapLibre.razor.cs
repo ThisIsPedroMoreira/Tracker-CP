@@ -1111,8 +1111,18 @@ public partial class MapLibre : ComponentBase, IAsyncDisposable
     /// </summary>
     /// <param name="center">The geographical center coordinates [longitude, latitude].</param>
     /// <param name="eventData">Optional event data.</param>
-    public async ValueTask SetCenter(LngLat center, object? eventData = null) =>
-        await _jsModule.InvokeVoidAsync("setCenter", MapId, center, eventData);
+    public async ValueTask SetCenter(LngLat center, object? eventData = null)
+    {
+        try
+        {
+            await _jsModule.InvokeVoidAsync("setCenter", MapId, center, eventData);
+        }
+        catch
+        {
+
+        }
+    }
+
 
     /// <summary>
     /// Sets whether the map's center is clamped to the ground.
@@ -1175,8 +1185,17 @@ public partial class MapLibre : ComponentBase, IAsyncDisposable
     /// </summary>
     /// <param name="zoom">The desired zoom level (0–20).</param>
     /// <param name="eventData">Optional event data.</param>
-    public async ValueTask SetZoom(double zoom, object? eventData = null) =>
-        await _jsModule.InvokeVoidAsync("setZoom", MapId, zoom, eventData);
+    public async ValueTask SetZoom(double zoom, object? eventData = null)
+    {
+        try
+        {
+            await _jsModule.InvokeVoidAsync("setZoom", MapId, zoom, eventData);
+        }
+        catch
+        {
+
+        }
+    }
 
     /// <summary>
     /// Adjusts the map's style to a new configuration or URL.
