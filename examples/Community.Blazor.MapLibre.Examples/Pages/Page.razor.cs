@@ -106,7 +106,7 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
         {
             await localStorage.SetItemAsync(StationStorageKey, Station);
             await SetStationDeparturesAsync();
-           
+
         }
 
         public async Task SetStationDeparturesAsync()
@@ -154,7 +154,7 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
             TrainId = trainId;
             await localStorage.SetItemAsync(TrainIdStorageKey, TrainId);
             await SetTrainAsync();
-            
+
         }
 
         public async Task SetTrainAsync()
@@ -216,7 +216,7 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
                                     HtmlContent = "<div><img src='https://upload.wikimedia.org/wikipedia/commons/7/77/Logo_CP_2.svg' width='30' height='30' class='border border-white border-3 rounded-circle shadow-lg'/></div>"
                                 }
                             };
-                            LngLat coordinates = new(double.Parse(trainStop.longitude), double.Parse(trainStop.latitude));
+                            LngLat coordinates = GetCoordinates(trainStop.longitude, trainStop.latitude);
                             StationMarkers.Add(await _mapRef.AddMarker(options, coordinates));
                         }
                     }
@@ -230,7 +230,7 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
                                 HtmlContent = "<div><img src='https://cdn-icons-png.flaticon.com/512/7721/7721842.png' width='30' height='30' class='border border-white border-3 rounded-circle shadow-lg'/></div>"
                             }
                         };
-                        LngLat coordinates = new(double.Parse(train.longitude), double.Parse(train.latitude));
+                        LngLat coordinates = GetCoordinates(train.longitude, train.latitude);
                         TrainMarker = await _mapRef.AddMarker(options, coordinates);
                         await _mapRef.SetCenter(coordinates);
                     }
@@ -240,6 +240,13 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
             }
             await InvokeAsync(StateHasChanged);
 
+        }
+
+        private static LngLat GetCoordinates(string longitude, string latitude)
+        {
+            longitude = longitude.Replace(",", ".");
+            latitude = latitude.Replace(",", ".");
+            return new(double.Parse(longitude, NumberStyles.Float, NumberFormatInfo.InvariantInfo), double.Parse(latitude, NumberStyles.Float, NumberFormatInfo.InvariantInfo));
         }
 
 
