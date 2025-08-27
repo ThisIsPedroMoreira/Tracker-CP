@@ -117,5 +117,5 @@ code {
 }
 
 .maplibregl-popup-close-button {
-    display: none;
+    display: none !important;
 }
