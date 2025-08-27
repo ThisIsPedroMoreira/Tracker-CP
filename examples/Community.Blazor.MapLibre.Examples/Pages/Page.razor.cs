@@ -64,8 +64,16 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
 
                 //if (stations == null)
                 //    return;
+                Dictionary<string, string>? stations = null!;
 
-                Dictionary<string, string>? stations = await stationsRequestResponse.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                try
+                {
+                    stations = await stationsRequestResponse.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                }
+                catch
+                {
+
+                }
 
                 if (stations == null)
                     return;
@@ -135,7 +143,15 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
                 //if (stationsDepartures == null)
                 //    return;
 
-                List<StationTrain>? stationsDepartures = await stationsDeparturesRequestResponse.Content.ReadFromJsonAsync<List<StationTrain>>();
+                List<StationTrain>? stationsDepartures = null!;
+                try
+                {
+                    stationsDepartures = await stationsDeparturesRequestResponse.Content.ReadFromJsonAsync<List<StationTrain>>();
+                }
+                catch
+                {
+
+                }
 
                 if (stationsDepartures == null)
                     return;
@@ -193,7 +209,17 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
                 //if (train == null)
                 //    return;
 
-                Train? train = await trainRequestResponse.Content.ReadFromJsonAsync<Train>();
+                Train? train = null!;
+
+                try
+                {
+                    train = await trainRequestResponse.Content.ReadFromJsonAsync<Train>();
+
+                }
+                catch
+                {
+                }
+
 
                 if (train == null)
                     return;
