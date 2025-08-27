@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "Community.Blazor.MapLibre.Examples",
   "resources": {
-    "hash": "sha256-38TY2q7Q4y+LN/tUZkd+ClHvvEAT7y1D4CJMjy83IJE=",
+    "hash": "sha256-LZ/aQKQjOqZHsUJYxBJehCnCPRfwzpmL/OpoYFSfvX4=",
     "fingerprinting": {
       "Blazored.LocalStorage.12n6dz54qr.wasm": "Blazored.LocalStorage.wasm",
       "Microsoft.AspNetCore.Components.sfflp80qwd.wasm": "Microsoft.AspNetCore.Components.wasm",
@@ -85,7 +85,7 @@
       "System.Private.CoreLib.n5uroez0g3.wasm": "System.Private.CoreLib.wasm",
       "Community.Blazor.MapLibre.9zuo3rmj2h.wasm": "Community.Blazor.MapLibre.wasm",
       "Community.Blazor.MapLibre.Examples.MapboxGlPlugin.5idqpgaahl.wasm": "Community.Blazor.MapLibre.Examples.MapboxGlPlugin.wasm",
-      "Community.Blazor.MapLibre.Examples.dcz4bzv8q5.wasm": "Community.Blazor.MapLibre.Examples.wasm",
+      "Community.Blazor.MapLibre.Examples.n4icg1zo3i.wasm": "Community.Blazor.MapLibre.Examples.wasm",
       "dotnet.native.gxoedyanqm.js": "dotnet.native.js",
       "dotnet.native.q8dvqwswik.wasm": "dotnet.native.wasm",
       "dotnet.js": "dotnet.js",
@@ -193,7 +193,7 @@
       "netstandard.l6eb4vcf55.wasm": "sha256-jfyrMDC4mn5SL+FVjVN82h3YK8ub8JHKmwhqxM1S/Ao=",
       "Community.Blazor.MapLibre.9zuo3rmj2h.wasm": "sha256-K/6BSh9evm/+j3rxRh3iTpvqZXPuUxB1KvxtAX0HYHU=",
       "Community.Blazor.MapLibre.Examples.MapboxGlPlugin.5idqpgaahl.wasm": "sha256-IyCI9fckgCmqWO6DCLfkNOnDh8XxJ8oICOkVdVnOMGE=",
-      "Community.Blazor.MapLibre.Examples.dcz4bzv8q5.wasm": "sha256-7dLUccabA9EUxiRQYatChj5zR8UxcnD66zrkarWtg1s="
+      "Community.Blazor.MapLibre.Examples.n4icg1zo3i.wasm": "sha256-x8ptvcfMOjdNRT67DMbFpRxd8LC0o6HOhAGrwWOGf7A="
     }
   },
   "cacheBootResources": true,
