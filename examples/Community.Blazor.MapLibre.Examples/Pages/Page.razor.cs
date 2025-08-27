@@ -28,8 +28,8 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
         private long RequestElapsedMilliseconds { get; set; } = default!;
         private Train Train { get; set; } = default!;
         private MapLibre _mapRef { get; set; } = default!;
-        private Guid? TrainMarker { get; set; } = default!;
-        private List<Guid> StationMarkers { get; set; } = []!;
+        private Tuple<int, Guid>? TrainMarker { get; set; } = default!;
+        private Dictionary<string, Guid> StationMarkers { get; set; } = []!;
         private readonly MapOptions _mapOptions = new()
         {
             Container = "UniqueMapId",
@@ -172,22 +172,37 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
             await SetTrainAsync();
 
         }
-
-        public async Task SetTrainAsync()
+        private async Task RemoveAllMarkersAsync()
         {
-            if (TrainMarker.HasValue)
+            if (TrainMarker != null)
             {
-                await _mapRef.RemoveMarker(TrainMarker.Value);
+                await _mapRef.RemoveMarker(TrainMarker.Item2);
                 TrainMarker = default!;
             }
-            foreach (Guid stationMarker in StationMarkers)
+            foreach (KeyValuePair<string, Guid> stationMarker in StationMarkers)
             {
-                await _mapRef.RemoveMarker(stationMarker);
+                await _mapRef.RemoveMarker(stationMarker.Value);
             }
             StationMarkers = [];
+        }
 
+        private async Task DefaultMapAsync()
+        {
+            if (_mapRef == null) return;
+            LngLat coordinates = new()
+            {
+                Latitude = 38.7071,
+                Longitude = -9.13549
+            };
+            await _mapRef.SetCenter(coordinates);
+            await _mapRef.SetZoom(7);
+        }
+        public async Task SetTrainAsync()
+        {
             if (!TrainId.HasValue || TrainId == 0)
             {
+                await RemoveAllMarkersAsync();
+                await DefaultMapAsync();
                 Train = default!;
             }
             else
@@ -222,7 +237,13 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
 
 
                 if (train == null)
+                {
+                    await RemoveAllMarkersAsync();
+                    await DefaultMapAsync();
+                    Train = default!;
+                    await InvokeAsync(StateHasChanged);
                     return;
+                }
 
                 Train = train;
 
@@ -231,34 +252,94 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
 
                 if (_mapRef != null)
                 {
+                    List<KeyValuePair<string, Guid>> stationMarkersToDelete = [.. StationMarkers.Where(s => !train.trainStops.Any(ts => ts.station.code == s.Key))];
+                    foreach (KeyValuePair<string, Guid> stationMarkerToDelete in stationMarkersToDelete)
+                    {
+                        StationMarkers.Remove(stationMarkerToDelete.Key);
+                    }
                     foreach (TrainStop trainStop in train.trainStops)
                     {
+                        if (StationMarkers.ContainsKey(trainStop.station.code))
+                            continue;
                         if (trainStop.latitude != null && trainStop.longitude != null)
                         {
+                            //@if(train.departureTime.HasValue)
+                            //                    {
+
+                            //    @if(train.etd.HasValue && train.departureTime != train.etd)
+                            //                        {
+                            //                            < s >
+                            //                                @train.departureTime
+                            //                            </ s >
+                            //                            @(" ")
+                            //                            @train.etd
+                            //                        }
+                            //                        else
+                            //    {
+                            //        @train.departureTime
+                            //                        }
+                            //} 
+                            string arrival = string.Empty;
+                            if (trainStop.arrival.HasValue)
+                            {
+                                if (trainStop.eta.HasValue && trainStop.arrival != trainStop.eta)
+                                {
+                                    arrival = $"<p>Hora de Chegada: <s>{trainStop.arrival}</s> {trainStop.eta}</p>";
+                                }
+                                else
+                                {
+                                    arrival = $"<p>Hora de Chegada: {trainStop.arrival}</p>";
+                                }
+                            }
+                            string departure = string.Empty;
+                            if (trainStop.departure.HasValue)
+                            {
+                                if (trainStop.etd.HasValue && trainStop.departure != trainStop.etd)
+                                {
+                                    departure = $"<p>Hora de Saída: <s>{trainStop.departure}</s> {trainStop.etd}</p>";
+                                }
+                                else
+                                {
+                                    departure = $"<p>Hora de Saída: {trainStop.departure}</p>";
+                                }
+                            }
                             MarkerOptions options = new()
                             {
                                 Extensions = new MarkerOptionsExtensions
                                 {
+                                    PopupHtmlContent = $"<div><p>Estação: {trainStop.station.designation}</p>{arrival}{departure}<p>Atraso: {trainStop?.delay ?? 0} mins</p><p>Plataforma: {trainStop!.platform}</p></div>",
                                     HtmlContent = "<div><img src='https://upload.wikimedia.org/wikipedia/commons/7/77/Logo_CP_2.svg' width='30' height='30' class='border border-white border-3 rounded-circle shadow-lg'/></div>"
                                 }
                             };
                             LngLat coordinates = GetCoordinates(trainStop.longitude, trainStop.latitude);
-                            StationMarkers.Add(await _mapRef.AddMarker(options, coordinates));
+                            StationMarkers.Add(trainStop.station.code, await _mapRef.AddMarker(options, coordinates));
                         }
                     }
 
                     if (train.latitude != null && train.longitude != null)
-                    {
+                    { 
                         MarkerOptions options = new()
                         {
                             Extensions = new MarkerOptionsExtensions
                             {
+                                PopupHtmlContent = $"<div><p>Número: {train.trainNumber}</p><p>Tipo: {train.serviceCode.designation}</p><p>Estado: {train.status}</p><p>Atraso: {train?.delay ?? 0} mins</p></div>",
                                 HtmlContent = "<div><img src='https://cdn-icons-png.flaticon.com/512/7721/7721842.png' width='30' height='30' class='border border-white border-3 rounded-circle shadow-lg'/></div>"
                             }
                         };
-                        LngLat coordinates = GetCoordinates(train.longitude, train.latitude);
-                        TrainMarker = await _mapRef.AddMarker(options, coordinates);
-                        await _mapRef.SetCenter(coordinates);
+                        LngLat coordinates = GetCoordinates(train!.longitude, train.latitude);
+                        if (TrainMarker != null)
+                        {
+                            await _mapRef.RemoveMarker(TrainMarker.Item2);
+                        }
+                        if (TrainMarker?.Item1 != TrainId.Value)
+                        {
+                            await _mapRef.SetCenter(coordinates);
+                        }
+                        TrainMarker = new(TrainId.Value, await _mapRef.AddMarker(options, coordinates));
+                    }
+                    else
+                    {
+                        await DefaultMapAsync();
                     }
 
 

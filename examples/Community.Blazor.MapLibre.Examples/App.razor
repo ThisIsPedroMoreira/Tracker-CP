@@ -1,3 +1,12 @@
 ﻿@using Community.Blazor.MapLibre.Examples.WebAssembly.Pages
 
-<Page />
+<ErrorBoundary>
+    <ChildContent>
+        <Page />
+    </ChildContent>
+    <ErrorContent Context="ex"> 
+        <p>Message: @ex.Message</p>  
+        <p>StackTrace: @ex.StackTrace</p>
+        <p>HResult: @ex.HResult</p>
+    </ErrorContent>
+</ErrorBoundary>
