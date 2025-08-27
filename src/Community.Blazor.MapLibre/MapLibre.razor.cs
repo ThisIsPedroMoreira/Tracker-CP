@@ -46,7 +46,7 @@ public partial class MapLibre : ComponentBase, IAsyncDisposable
     /// Used to facilitate communication between JavaScript and the .NET component.
     /// </summary>
     private DotNetObjectReference<MapLibre> _dotNetObjectReference = null!;
-    
+
     /// <summary>
     /// A collection of custom plugins that extend the functionality of the MapLibre map.
     /// </summary>
@@ -131,33 +131,42 @@ public partial class MapLibre : ComponentBase, IAsyncDisposable
 
     #region Setup
 
+    [Inject]
+    public NavigationManager navigationManager { get; set; } = default!;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        try
         {
-            await JsRuntime.InvokeAsync<IJSObjectReference>("import",
-                "./_content/Community.Blazor.MapLibre/maplibre-5.3.0.min.js");
-
-            // Import your JavaScript module
-            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import",
-                "./_content/Community.Blazor.MapLibre/MapLibre.razor.js");
-
-            _dotNetObjectReference = DotNetObjectReference.Create(this);
-
-            // Just making sure the Container is being seeded on Create
-            Options.Container = MapId;
-
-            // Initialize the MapLibre map
-            _mapObject = await _jsModule.InvokeAsync<IJSObjectReference>("initializeMap", Options, _dotNetObjectReference);
-            
-            // Load the plugins after the map has been initialized
-            foreach (var plugin in _plugins)
+            if (firstRender)
             {
-                await plugin.Initialize(_mapObject, JsRuntime);
+                await JsRuntime.InvokeAsync<IJSObjectReference>("import",
+                    "./_content/Community.Blazor.MapLibre/maplibre-5.3.0.min.js");
+
+                // Import your JavaScript module
+                _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import",
+                    "./_content/Community.Blazor.MapLibre/MapLibre.razor.js");
+
+                _dotNetObjectReference = DotNetObjectReference.Create(this);
+
+                // Just making sure the Container is being seeded on Create
+                Options.Container = MapId;
+
+                // Initialize the MapLibre map
+                _mapObject = await _jsModule.InvokeAsync<IJSObjectReference>("initializeMap", Options, _dotNetObjectReference);
+
+                // Load the plugins after the map has been initialized
+                foreach (var plugin in _plugins)
+                {
+                    await plugin.Initialize(_mapObject, JsRuntime);
+                }
             }
         }
+        catch
+        {
+            navigationManager.Refresh(forceReload: true);
+        }
     }
-    
+
     public void RegisterPlugin(IMapLibrePlugin plugin)
     {
         ArgumentNullException.ThrowIfNull(plugin, nameof(plugin));
@@ -1150,7 +1159,7 @@ public partial class MapLibre : ComponentBase, IAsyncDisposable
     /// </param>
     public async ValueTask SetFilter(string layerId, object filter, StyleSetterOptions options) =>
         await _jsModule.InvokeVoidAsync("setFilter", MapId, layerId, filter, options);
-    
+
     /// <summary>
     /// Sets the map's projection configuration, which determines how geographic coordinates are projected to the screen.
     /// </summary>
@@ -1160,7 +1169,7 @@ public partial class MapLibre : ComponentBase, IAsyncDisposable
     /// </param>
     public async ValueTask SetProjection(ProjectionSpecification projection) =>
         await _jsModule.InvokeVoidAsync("setProjection", MapId, projection);
-    
+
     /// <summary>
     /// Sets a zoom level for the map.
     /// </summary>
@@ -1255,7 +1264,7 @@ public partial class MapLibre : ComponentBase, IAsyncDisposable
         await _jsModule.InvokeVoidAsync("createMarker", MapId, id, options, position);
         return id;
     }
-    
+
     /// <summary>
     /// Removes a marker from the map by its unique identifier.
     /// </summary>
@@ -1263,7 +1272,7 @@ public partial class MapLibre : ComponentBase, IAsyncDisposable
     /// <returns>A task that represents the asynchronous operation.</returns>
     public async Task RemoveMarker(Guid markerId)
         => await _jsModule.InvokeVoidAsync("removeMarker", markerId);
-    
+
     /// <summary>
     /// Moves a marker on the map.
     /// </summary>
