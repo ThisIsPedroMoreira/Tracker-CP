@@ -24,6 +24,7 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
         private SfGrid<StationTrain> StationInfoGrid { get; set; } = default!;
         private Station Station { get; set; } = default!;
         private int? TrainId { get; set; } = default!;
+        private int? PreviousTrainId { get; set; } = default!;
         private TimeOnly? LastUpdate { get; set; } = default!;
         private long RequestElapsedMilliseconds { get; set; } = default!;
         private Train Train { get; set; } = default!;
@@ -199,11 +200,13 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
             await _mapRef.SetCenter(coordinates);
             await _mapRef.SetZoom(7);
         }
+
         public async Task SetTrainAsync()
         {
+            await RemoveAllMarkersAsync();
+
             if (!TrainId.HasValue || TrainId == 0)
             {
-                await RemoveAllMarkersAsync();
                 await DefaultMapAsync();
                 Train = default!;
             }
@@ -254,77 +257,69 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
                 RequestElapsedMilliseconds = sw.ElapsedMilliseconds;
 
                 if (_mapRef != null)
-                { 
-
-                    List<KeyValuePair<string, Guid>> stationMarkersToDelete = [.. StationMarkers.Where(s => !train.trainStops.Any(ts => ts.station.code == s.Key))];
-                    foreach (KeyValuePair<string, Guid> stationMarkerToDelete in stationMarkersToDelete)
+                {
+                    foreach (TrainStop trainStop in train.trainStops.Where(ts => ts.latitude != null && ts.longitude != null))
                     {
-                        StationMarkers.Remove(stationMarkerToDelete.Key);
-                        await _mapRef.RemoveMarker(stationMarkerToDelete.Value);
-                    }
-                    foreach (TrainStop trainStop in train.trainStops)
-                    {
-                        if (StationMarkers.ContainsKey(trainStop.station.code))
-                            continue;
-                        if (trainStop.latitude != null && trainStop.longitude != null)
+                        string arrival = string.Empty;
+                        if (trainStop.arrival.HasValue)
                         {
-                            string arrival = string.Empty;
-                            if (trainStop.arrival.HasValue)
+                            if (trainStop.eta.HasValue && trainStop.arrival != trainStop.eta)
                             {
-                                if (trainStop.eta.HasValue && trainStop.arrival != trainStop.eta)
-                                {
-                                    arrival = $"<p>Hora de Chegada: <s>{trainStop.arrival}</s> {trainStop.eta}</p>";
-                                }
-                                else
-                                {
-                                    arrival = $"<p>Hora de Chegada: {trainStop.arrival}</p>";
-                                }
+                                arrival = $"<p>Hora de Chegada: <s>{trainStop.arrival}</s> {trainStop.eta}</p>";
                             }
-                            string departure = string.Empty;
-                            if (trainStop.departure.HasValue)
+                            else
                             {
-                                if (trainStop.etd.HasValue && trainStop.departure != trainStop.etd)
-                                {
-                                    departure = $"<p>Hora de Saída: <s>{trainStop.departure}</s> {trainStop.etd}</p>";
-                                }
-                                else
-                                {
-                                    departure = $"<p>Hora de Saída: {trainStop.departure}</p>";
-                                }
+                                arrival = $"<p>Hora de Chegada: {trainStop.arrival}</p>";
                             }
-                            MarkerOptions options = new()
-                            {
-                                Extensions = new MarkerOptionsExtensions
-                                {
-                                    PopupHtmlContent = $"<div><p>Estação: {trainStop.station.designation}</p>{arrival}{departure}<p>Atraso: {trainStop?.delay ?? 0} mins</p><p>Plataforma: {trainStop!.platform}</p></div>",
-                                    HtmlContent = "<div><img src='https://upload.wikimedia.org/wikipedia/commons/7/77/Logo_CP_2.svg' width='30' height='30' class='border border-white border-3 rounded-circle shadow-lg'/></div>"
-                                }
-                            };
-                            LngLat coordinates = GetCoordinates(trainStop.longitude, trainStop.latitude);
-                            StationMarkers.Add(trainStop.station.code, await _mapRef.AddMarker(options, coordinates));
                         }
-                    }
-
-                    if (train.latitude != null && train.longitude != null)
-                    {
+                        string departure = string.Empty;
+                        if (trainStop.departure.HasValue)
+                        {
+                            if (trainStop.etd.HasValue && trainStop.departure != trainStop.etd)
+                            {
+                                departure = $"<p>Hora de Saída: <s>{trainStop.departure}</s> {trainStop.etd}</p>";
+                            }
+                            else
+                            {
+                                departure = $"<p>Hora de Saída: {trainStop.departure}</p>";
+                            }
+                        }
                         MarkerOptions options = new()
                         {
                             Extensions = new MarkerOptionsExtensions
                             {
-                                PopupHtmlContent = $"<div><p>Número: {train.trainNumber}</p><p>Tipo: {train.serviceCode.designation}</p><p>Estado: {train.status}</p><p>Atraso: {train?.delay ?? 0} mins</p></div>",
+                                PopupHtmlContent = $"<div><p>Estação: {trainStop.station.designation}</p>{arrival}{departure}<p>Atraso: {trainStop?.delay ?? 0} mins</p><p>Plataforma: {trainStop!.platform}</p></div>",
+                                HtmlContent = "<div><img src='https://upload.wikimedia.org/wikipedia/commons/7/77/Logo_CP_2.svg' width='30' height='30' class='border border-white border-3 rounded-circle shadow-lg'/></div>"
+                            }
+                        };
+                        LngLat coordinates = GetCoordinates(trainStop.longitude, trainStop.latitude);
+                        StationMarkers.Add(trainStop.station.code, await _mapRef.AddMarker(options, coordinates));
+                    }
+
+                    if (train.latitude != null && train.longitude != null)
+                    {
+                        TrainStop? origin = train.trainStops.FirstOrDefault();
+                        TrainStop? destination = train.trainStops.LastOrDefault();
+                        string route = string.Empty;
+                        if (origin != null && destination != null)
+                        {
+                            route = $"<p>Rota: {origin.station.designation} - {destination.station.designation}</p>";
+                        }
+                        MarkerOptions options = new()
+                        {
+                            Extensions = new MarkerOptionsExtensions
+                            {
+                                PopupHtmlContent = $"<div><p>Número: {train.trainNumber}</p><p>Tipo: {train.serviceCode.designation}</p>{route}<p>Estado: {train.status}</p><p>Atraso: {train?.delay ?? 0} mins</p></div>",
                                 HtmlContent = "<div><img src='https://cdn-icons-png.flaticon.com/512/7721/7721842.png' width='30' height='30' class='border border-white border-3 rounded-circle shadow-lg'/></div>"
                             }
                         };
                         LngLat coordinates = GetCoordinates(train!.longitude, train.latitude);
-                        if (TrainMarker != null)
-                        {
-                            await _mapRef.RemoveMarker(TrainMarker.Item2);
-                        }
-                        if (TrainMarker?.Item1 != TrainId.Value)
+                        TrainMarker = new(TrainId.Value, await _mapRef.AddMarker(options, coordinates));
+                        if (TrainId.Value != PreviousTrainId)
                         {
                             await _mapRef.SetCenter(coordinates);
+                            PreviousTrainId = TrainId.Value;
                         }
-                        TrainMarker = new(TrainId.Value, await _mapRef.AddMarker(options, coordinates));
                     }
                     else
                     {
