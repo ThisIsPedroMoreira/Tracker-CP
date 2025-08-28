@@ -50,24 +50,25 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
             using (HttpClient stationsClient = new())
             {
 
-                HttpResponseMessage stationsRequestResponse = await stationsClient.GetAsync($"{CorsProxy}https://www.cp.pt/sites/spring/station-index");
-
-                if (!stationsRequestResponse.IsSuccessStatusCode)
-                    return;
-
-                //ProxyResponse? stationsResponse = await stationsRequestResponse.Content.ReadFromJsonAsync<ProxyResponse>();
-
-                //if (stationsResponse == null)
-                //    return;
-
-                //Dictionary<string, string>? stations = JsonSerializer.Deserialize<Dictionary<string, string>>(stationsResponse.contents);
-
-                //if (stations == null)
-                //    return;
                 Dictionary<string, string>? stations = null!;
 
                 try
                 {
+                    HttpResponseMessage stationsRequestResponse = await stationsClient.GetAsync($"{CorsProxy}https://www.cp.pt/sites/spring/station-index");
+
+                    if (!stationsRequestResponse.IsSuccessStatusCode)
+                        return;
+
+                    //ProxyResponse? stationsResponse = await stationsRequestResponse.Content.ReadFromJsonAsync<ProxyResponse>();
+
+                    //if (stationsResponse == null)
+                    //    return;
+
+                    //Dictionary<string, string>? stations = JsonSerializer.Deserialize<Dictionary<string, string>>(stationsResponse.contents);
+
+                    //if (stations == null)
+                    //    return;
+
                     stations = await stationsRequestResponse.Content.ReadFromJsonAsync<Dictionary<string, string>>();
                 }
                 catch
@@ -76,7 +77,7 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
                 }
 
                 if (stations == null)
-                    return;
+                    stations = [];
 
                 Stations = [.. stations.Select(s => new Station()
                 {
@@ -128,24 +129,25 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
 
                 using HttpClient stationsDeparturesClient = new();
 
-                HttpResponseMessage stationsDeparturesRequestResponse = await stationsDeparturesClient.GetAsync($"{CorsProxy}https://www.cp.pt/sites/spring/station/trains?stationId={Station.Code}");
-
-                if (!stationsDeparturesRequestResponse.IsSuccessStatusCode)
-                    return;
-
-                //ProxyResponse? stationsDeparturesResponse = await stationsDeparturesRequestResponse.Content.ReadFromJsonAsync<ProxyResponse>();
-
-                //if (stationsDeparturesResponse == null)
-                //    return;
-
-                //List<StationTrain>? stationsDepartures = JsonSerializer.Deserialize<List<StationTrain>>(stationsDeparturesResponse.contents);
-
-                //if (stationsDepartures == null)
-                //    return;
-
                 List<StationTrain>? stationsDepartures = null!;
+
                 try
                 {
+                    HttpResponseMessage stationsDeparturesRequestResponse = await stationsDeparturesClient.GetAsync($"{CorsProxy}https://www.cp.pt/sites/spring/station/trains?stationId={Station.Code}");
+
+                    if (!stationsDeparturesRequestResponse.IsSuccessStatusCode)
+                        return;
+
+                    //ProxyResponse? stationsDeparturesResponse = await stationsDeparturesRequestResponse.Content.ReadFromJsonAsync<ProxyResponse>();
+
+                    //if (stationsDeparturesResponse == null)
+                    //    return;
+
+                    //List<StationTrain>? stationsDepartures = JsonSerializer.Deserialize<List<StationTrain>>(stationsDeparturesResponse.contents);
+
+                    //if (stationsDepartures == null)
+                    //    return; 
+
                     stationsDepartures = await stationsDeparturesRequestResponse.Content.ReadFromJsonAsync<List<StationTrain>>();
                 }
                 catch
@@ -154,7 +156,7 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
                 }
 
                 if (stationsDepartures == null)
-                    return;
+                    stationsDepartures = [];
 
                 StationInfo = stationsDepartures;
             }
@@ -209,32 +211,33 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
             {
                 using HttpClient trainClient = new();
                 Stopwatch sw = Stopwatch.StartNew();
-                HttpResponseMessage trainRequestResponse = await trainClient.GetAsync($"{CorsProxy}https://www.cp.pt/sites/spring/station/trains/train?trainId={TrainId}");
-                sw.Stop();
-                if (!trainRequestResponse.IsSuccessStatusCode)
-                    return;
-
-                //ProxyResponse? trainResponse = await trainRequestResponse.Content.ReadFromJsonAsync<ProxyResponse>();
-
-                //if (trainResponse == null)
-                //    return;
-
-                //Train? train = JsonSerializer.Deserialize<Train>(trainResponse.contents);
-
-                //if (train == null)
-                //    return;
-
                 Train? train = null!;
 
                 try
                 {
+                    HttpResponseMessage trainRequestResponse = await trainClient.GetAsync($"{CorsProxy}https://www.cp.pt/sites/spring/station/trains/train?trainId={TrainId}");
+
+                    if (!trainRequestResponse.IsSuccessStatusCode)
+                        return;
+
+                    //ProxyResponse? trainResponse = await trainRequestResponse.Content.ReadFromJsonAsync<ProxyResponse>();
+
+                    //if (trainResponse == null)
+                    //    return;
+
+                    //Train? train = JsonSerializer.Deserialize<Train>(trainResponse.contents);
+
+                    //if (train == null)
+                    //    return;
+
+
                     train = await trainRequestResponse.Content.ReadFromJsonAsync<Train>();
 
                 }
                 catch
                 {
                 }
-
+                sw.Stop();
 
                 if (train == null)
                 {
@@ -251,11 +254,13 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
                 RequestElapsedMilliseconds = sw.ElapsedMilliseconds;
 
                 if (_mapRef != null)
-                {
+                { 
+
                     List<KeyValuePair<string, Guid>> stationMarkersToDelete = [.. StationMarkers.Where(s => !train.trainStops.Any(ts => ts.station.code == s.Key))];
                     foreach (KeyValuePair<string, Guid> stationMarkerToDelete in stationMarkersToDelete)
                     {
                         StationMarkers.Remove(stationMarkerToDelete.Key);
+                        await _mapRef.RemoveMarker(stationMarkerToDelete.Value);
                     }
                     foreach (TrainStop trainStop in train.trainStops)
                     {
@@ -263,22 +268,6 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
                             continue;
                         if (trainStop.latitude != null && trainStop.longitude != null)
                         {
-                            //@if(train.departureTime.HasValue)
-                            //                    {
-
-                            //    @if(train.etd.HasValue && train.departureTime != train.etd)
-                            //                        {
-                            //                            < s >
-                            //                                @train.departureTime
-                            //                            </ s >
-                            //                            @(" ")
-                            //                            @train.etd
-                            //                        }
-                            //                        else
-                            //    {
-                            //        @train.departureTime
-                            //                        }
-                            //} 
                             string arrival = string.Empty;
                             if (trainStop.arrival.HasValue)
                             {
@@ -317,7 +306,7 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
                     }
 
                     if (train.latitude != null && train.longitude != null)
-                    { 
+                    {
                         MarkerOptions options = new()
                         {
                             Extensions = new MarkerOptionsExtensions
