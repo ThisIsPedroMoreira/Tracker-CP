@@ -98,15 +98,17 @@ namespace Community.Blazor.MapLibre.Examples.WebAssembly.Pages
 
             while (true)
             {
-
-
+                //25 seg
+                await Task.Delay(25000);
+                if (Station != null)
+                {
+                    await SetStationDeparturesAsync();
+                }
                 if (TrainId.HasValue && TrainId != 0)
                 {
                     await SetTrainAsync();
                     await InvokeAsync(StateHasChanged);   // refresh everything 
                 }
-                //25 seg
-                await Task.Delay(25000);
 
             }
             //await base.OnInitializedAsync();
